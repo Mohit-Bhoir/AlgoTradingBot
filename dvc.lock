@@ -57,8 +57,8 @@ stages:
       size: 6030
     - path: src/evaluate.py
       hash: md5
-      md5: 69486ddd7baed7473f53d4a23c6ef5fc
-      size: 1206
+      md5: d456cd70e4be643fcd3ed8fd0494786b
+      size: 2440
   data_fetch:
     cmd: python src/fetch_data.py
     deps:
