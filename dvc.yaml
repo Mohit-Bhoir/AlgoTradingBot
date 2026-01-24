@@ -1,4 +1,18 @@
 stages:
+  data_fetch:
+    cmd: python src/fetch_data.py
+    deps:
+    - src/fetch_data.py
+    - API CONNECT/oanda.cfg
+    params:
+    - data_fetch.config_path
+    - data_fetch.instrument
+    - data_fetch.start
+    - data_fetch.end
+    - data_fetch.granularity
+    - data_fetch.output
+    outs:
+    - data/raw/data.csv
   preprocess:
     cmd: python src/preprocess.py
     deps:

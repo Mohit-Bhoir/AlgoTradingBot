@@ -59,3 +59,27 @@ stages:
       hash: md5
       md5: 69486ddd7baed7473f53d4a23c6ef5fc
       size: 1206
+  data_fetch:
+    cmd: python src/fetch_data.py
+    deps:
+    - path: API CONNECT/oanda.cfg
+      hash: md5
+      md5: e54ed631171be056a2f21b9f547dc12d
+      size: 146
+    - path: src/fetch_data.py
+      hash: md5
+      md5: df1d4e71827948d3055a95d572f99de7
+      size: 1647
+    params:
+      params.yaml:
+        data_fetch.config_path: API CONNECT/oanda.cfg
+        data_fetch.end: '2025-12-31'
+        data_fetch.granularity: M15
+        data_fetch.instrument: EUR_USD
+        data_fetch.output: data/raw/data.csv
+        data_fetch.start: '2023-01-01'
+    outs:
+    - path: data/raw/data.csv
+      hash: md5
+      md5: 6ee0e54395bf6b3b357428cbcb907ab5
+      size: 2150887
