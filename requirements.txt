@@ -3,3 +3,7 @@ tpqoax
 dvc
 mlflow
 dagshub
+scikit-learn
+matplotlib
+dvc-s3
+xgboost

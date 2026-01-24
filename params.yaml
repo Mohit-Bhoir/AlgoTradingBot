@@ -1,0 +1,17 @@
+preprocess:
+  input: data/raw/data.csv
+  output: data/processed/data_clean.csv
+  lags: 10
+
+train:
+  data_path: data/processed/data_clean.csv
+  model_path: models/model.pkl
+  test_size: 0.2
+  random_state: 42
+  n_estimators: 2
+  max_depth: 2
+  model: models/model.pkl
+
+evaluate:
+  data_path: data/processed/data_clean.csv
+  model_path: models/model.pkl
