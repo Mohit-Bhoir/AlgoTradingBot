@@ -62,6 +62,17 @@ strategy_type = st.sidebar.selectbox(
 
 initial_capital = st.sidebar.number_input("Initial Capital ($)", value=10000, step=1000)
 
+# Date Range Selection
+min_date = data['time'].min().date()
+max_date = data['time'].max().date()
+
+st.sidebar.subheader("Backtest Period")
+start_date = st.sidebar.date_input("Start Date", min_date, min_value=min_date, max_value=max_date)
+end_date = st.sidebar.date_input("End Date", max_date, min_value=min_date, max_value=max_date)
+
+if start_date > end_date:
+    st.sidebar.error("Start Date must be before End Date")
+
 # Strategy specific params
 if strategy_type == "XGBoost (ML)":
     st.sidebar.info("XGBoost Model (Time Filter 12-16 UTC)")
@@ -81,8 +92,8 @@ if st.button("Run Iterative Backtest"):
     # 1. Init Backtest Engine
     bc = IterativeBacktest(
         symbol="EUR_USD", 
-        start=None, 
-        end=None, 
+        start=str(start_date), 
+        end=str(end_date), 
         amount=initial_capital, 
         use_spread=True,
         data_path=data_path
