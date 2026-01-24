@@ -55,15 +55,30 @@ if model is None:
 
 # --- SIDEBAR SETTINGS ---
 st.sidebar.header("Settings")
+strategy_type = st.sidebar.selectbox(
+    "Select Strategy",
+    ["XGBoost (ML)", "SMA Crossover", "Bollinger Bands", "Contrarian"]
+)
+
 initial_capital = st.sidebar.number_input("Initial Capital ($)", value=10000, step=1000)
-# Confidence or other params could go here if model outputs probs
+
+# Strategy specific params
+if strategy_type == "XGBoost (ML)":
+    st.sidebar.info("XGBoost Model (Time Filter 12-16 UTC)")
+elif strategy_type == "SMA Crossover":
+    sma_s = st.sidebar.number_input("Short SMA", value=50, min_value=1)
+    sma_l = st.sidebar.number_input("Long SMA", value=200, min_value=1)
+elif strategy_type == "Bollinger Bands":
+    bb_sma = st.sidebar.number_input("SMA Window", value=20, min_value=1)
+    bb_dev = st.sidebar.number_input("Deviations", value=2, min_value=1)
+elif strategy_type == "Contrarian":
+    con_window = st.sidebar.number_input("Lookback Window", value=1, min_value=1)
 
 # --- ITERATIVE BACKTEST EXECUTION ---
 if st.button("Run Iterative Backtest"):
     from IterativeBacktest import IterativeBacktest
     
-    # 1. Init Backtest Engine (loads data internally from processed/data_clean.csv)
-    # We pass the same data used by the pipeline
+    # 1. Init Backtest Engine
     bc = IterativeBacktest(
         symbol="EUR_USD", 
         start=None, 
@@ -73,15 +88,23 @@ if st.button("Run Iterative Backtest"):
         data_path=data_path
     )
     
-    # 2. Run Strategy using the loaded model
-    with st.spinner("Running Event-Driven Backtest..."):
-        bc.test_xgboost_strategy(model)
+    # 2. Run selected strategy
+    with st.spinner(f"Running {strategy_type} Backtest..."):
+        if strategy_type == "XGBoost (ML)":
+            bc.test_xgboost_strategy(model)
+        elif strategy_type == "SMA Crossover":
+            bc.test_sma_strategy(sma_s, sma_l)
+        elif strategy_type == "Bollinger Bands":
+            bc.test_boll_strategy(bb_sma, bb_dev)
+        elif strategy_type == "Contrarian":
+            bc.test_con_strategy(con_window)
     
     # 3. Process Results
     history_df = pd.DataFrame(bc.history)
     
     if not history_df.empty:
         history_df = history_df.set_index("time")
+
         
         col1, col2 = st.columns([3,1])
         

@@ -66,6 +66,7 @@ class IterativeBacktest(IterativeBase):
                 if self.position in [0, 1]:
                     self.go_short(bar, amount = "all") # go short with full amount
                     self.position = -1 # short position
+            self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
         
         
@@ -105,6 +106,7 @@ class IterativeBacktest(IterativeBase):
                 if self.position in [0, 1]:
                     self.go_short(bar, amount = "all") # go short with full amount
                     self.position = -1 # short position
+            self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
         
         
@@ -160,6 +162,7 @@ class IterativeBacktest(IterativeBase):
                     if self.data["price"].iloc[bar] < self.data["Lower"].iloc[bar]: # signal to go long
                         self.go_long(bar, amount = "all") # go long with full amount
                         self.position = 1 # long position
+            self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
 
     def test_xgboost_strategy(self, model, preparation_func=None):
