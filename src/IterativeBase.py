@@ -68,9 +68,9 @@ class IterativeBase():
                  raw["returns"] = np.log(raw.price / raw.price.shift(1))
             
             # --- HARDCODED SPREAD LOGIC ---
-            # User requirement: half spread cost = 0.00005 per unit.
-            # This implies spread = 0.0001
-            raw["spread"] = 0.0001 
+            # User requirement: half spread cost = 0.0005 per unit.
+            # This implies spread = 0.001
+            raw["spread"] = 0.001 
             
             self.data = raw.dropna()
         except Exception as e:

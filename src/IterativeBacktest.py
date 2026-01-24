@@ -58,14 +58,23 @@ class IterativeBacktest(IterativeBase):
 
         # sma crossover strategy
         for bar in range(len(self.data)-1): # all bars (except the last bar)
-            if self.data["SMA_S"].iloc[bar] > self.data["SMA_L"].iloc[bar]: # signal to go long
-                if self.position in [0, -1]:
-                    self.go_long(bar, amount = "all") # go long with full amount
-                    self.position = 1  # long position
-            elif self.data["SMA_S"].iloc[bar] < self.data["SMA_L"].iloc[bar]: # signal to go short
-                if self.position in [0, 1]:
-                    self.go_short(bar, amount = "all") # go short with full amount
-                    self.position = -1 # short position
+            date, price, spread = self.get_values(bar)
+            current_hour = date.hour
+
+            if 12 <= current_hour < 16:
+                if self.data["SMA_S"].iloc[bar] > self.data["SMA_L"].iloc[bar]: # signal to go long
+                    if self.position in [0, -1]:
+                        self.go_long(bar, amount = "all") # go long with full amount
+                        self.position = 1  # long position
+                elif self.data["SMA_S"].iloc[bar] < self.data["SMA_L"].iloc[bar]: # signal to go short
+                    if self.position in [0, 1]:
+                        self.go_short(bar, amount = "all") # go short with full amount
+                        self.position = -1 # short position
+            else:
+                if self.position != 0:
+                    self.close_pos(bar) 
+                    self.position = 0
+            
             self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
         
@@ -98,14 +107,23 @@ class IterativeBacktest(IterativeBase):
         
         # Contrarian strategy
         for bar in range(len(self.data)-1): # all bars (except the last bar)
-            if self.data["rolling_returns"].iloc[bar] <= 0: #signal to go long
-                if self.position in [0, -1]:
-                    self.go_long(bar, amount = "all") # go long with full amount
-                    self.position = 1  # long position
-            elif self.data["rolling_returns"].iloc[bar] > 0: #signal to go short
-                if self.position in [0, 1]:
-                    self.go_short(bar, amount = "all") # go short with full amount
-                    self.position = -1 # short position
+            date, price, spread = self.get_values(bar)
+            current_hour = date.hour
+            
+            if 12 <= current_hour < 16:
+                if self.data["rolling_returns"].iloc[bar] <= 0: #signal to go long
+                    if self.position in [0, -1]:
+                        self.go_long(bar, amount = "all") # go long with full amount
+                        self.position = 1  # long position
+                elif self.data["rolling_returns"].iloc[bar] > 0: #signal to go short
+                    if self.position in [0, 1]:
+                        self.go_short(bar, amount = "all") # go short with full amount
+                        self.position = -1 # short position
+            else:
+                if self.position != 0:
+                    self.close_pos(bar) 
+                    self.position = 0
+            
             self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
         
@@ -142,26 +160,35 @@ class IterativeBacktest(IterativeBase):
         
         # Bollinger strategy
         for bar in range(len(self.data)-1): # all bars (except the last bar)
-            if self.position == 0: # when neutral
-                if self.data["price"].iloc[bar] < self.data["Lower"].iloc[bar]: # signal to go long
-                    self.go_long(bar, amount = "all") # go long with full amount
-                    self.position = 1  # long position
-                elif self.data["price"].iloc[bar] > self.data["Upper"].iloc[bar]: # signal to go Short
-                    self.go_short(bar, amount = "all") # go short with full amount
-                    self.position = -1 # short position
-            elif self.position == 1: # when long
-                if self.data["price"].iloc[bar] > self.data["SMA"].iloc[bar]:
-                    if self.data["price"].iloc[bar] > self.data["Upper"].iloc[bar]: # signal to go short
-                        self.go_short(bar, amount = "all") # go short with full amount
-                        self.position = -1 # short position
-                    else:
-                        self.sell_instrument(bar, units = self.units) # go neutral
-                        self.position = 0
-            elif self.position == -1: # when short
-                if self.data["price"].iloc[bar] < self.data["SMA"].iloc[bar]:
+            date, price, spread = self.get_values(bar)
+            current_hour = date.hour
+
+            if 12 <= current_hour < 16:
+                if self.position == 0: # when neutral
                     if self.data["price"].iloc[bar] < self.data["Lower"].iloc[bar]: # signal to go long
                         self.go_long(bar, amount = "all") # go long with full amount
-                        self.position = 1 # long position
+                        self.position = 1  # long position
+                    elif self.data["price"].iloc[bar] > self.data["Upper"].iloc[bar]: # signal to go Short
+                        self.go_short(bar, amount = "all") # go short with full amount
+                        self.position = -1 # short position
+                elif self.position == 1: # when long
+                    if self.data["price"].iloc[bar] > self.data["SMA"].iloc[bar]:
+                        if self.data["price"].iloc[bar] > self.data["Upper"].iloc[bar]: # signal to go short
+                            self.go_short(bar, amount = "all") # go short with full amount
+                            self.position = -1 # short position
+                        else:
+                            self.sell_instrument(bar, units = self.units) # go neutral
+                            self.position = 0
+                elif self.position == -1: # when short
+                    if self.data["price"].iloc[bar] < self.data["SMA"].iloc[bar]:
+                        if self.data["price"].iloc[bar] < self.data["Lower"].iloc[bar]: # signal to go long
+                            self.go_long(bar, amount = "all") # go long with full amount
+                            self.position = 1 # long position
+            else:
+                if self.position != 0:
+                    self.close_pos(bar) 
+                    self.position = 0
+
             self.store_history(bar)
         self.close_pos(bar+1) # close position at the last bar
 

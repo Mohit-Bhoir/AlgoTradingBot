@@ -128,89 +128,10 @@ if st.button("Run Iterative Backtest"):
             st.metric("Final Equity", f"${final_equity:,.2f}")
             st.metric("Total Return", f"{ret:.2%}")
             st.metric("Trades Executed", bc.trades)
+            
+        with st.expander("View Trade History / Raw Data"):
+            st.dataframe(history_df)
+
     else:
         st.warning("No trades executed or no history available.")
 
-st.divider()
-
-# --- Layout (Legacy Vectorized) ---
-
-col_1, col_2 = st.columns([3, 1])
-
-with col_1:
-    st.subheader("Vectorized Backtest (Reference)")
-
-# Prepare data for prediction (Legacy Vectorized)
-X = data.copy()
-# Drop target/meta columns as done in train/evaluate
-if "direction" in X.columns:
-    X = X.drop(columns=["direction"])
-cols_to_drop = [c for c in ["time", "price", "returns"] if c in X.columns]
-X = X.drop(columns=cols_to_drop)
-
-# Make Predictions
-try:
-    predictions = model.predict(X)
-    data['prediction'] = predictions
-except Exception as e:
-    st.error(f"Error making predictions: {e}")
-    st.stop()
-
-# --- Backtest Logic ---
-# 1 = Buy (Long), 0 = Sell (Short)
-# Note: This is an approximation. 
-# Robust backtesting needs vectorbt or backtrader. 
-# Here we do a simple vectorized backtest.
-
-data['position'] = np.where(data['prediction'] == 1, 1, -1)
-data['strategy_returns'] = data['position'] * data['returns']
-
-# Cumulative Returns
-data['creturns'] = data['returns'].cumsum().apply(np.exp)
-data['cstrategy'] = data['strategy_returns'].cumsum().apply(np.exp)
-
-# Equity Curve
-data['equity_bh'] = initial_capital * data['creturns']
-data['equity_strategy'] = initial_capital * data['cstrategy']
-
-# --- Layout ---
-
-col_1, col_2 = st.columns([3, 1])
-
-with col_1:
-    st.subheader("Equity Curve")
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=data['time'], y=data['equity_bh'], name='Buy & Hold', line=dict(color='gray', dash='dash')))
-    fig.add_trace(go.Scatter(x=data['time'], y=data['equity_strategy'], name='Strategy', line=dict(color='blue', width=2)))
-    fig.update_layout(xaxis_title='Date', yaxis_title='Equity ($)', template="plotly_white")
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_2:
-    st.subheader("Metrics")
-    total_return = (data['equity_strategy'].iloc[-1] / initial_capital) - 1
-    bh_return = (data['equity_bh'].iloc[-1] / initial_capital) - 1
-    
-    st.metric("Strategy Return", f"{total_return:.2%}")
-    st.metric("Buy & Hold Return", f"{bh_return:.2%}")
-    st.metric("Final Equity", f"${data['equity_strategy'].iloc[-1]:,.2f}")
-
-st.subheader("Visual Analysis (Last 500 bars)")
-# Zoom in on recent price action
-subset = data.tail(500)
-fig2 = go.Figure()
-fig2.add_trace(go.Scatter(x=subset['time'], y=subset['price'], name='Price', line=dict(color='black', width=1)))
-
-# Buy Signals (prediction=1)
-# Look for crossovers or just raw signals?
-# Let's plot points where prediction == 1
-buy_idx = subset[subset['prediction'] == 1]
-sell_idx = subset[subset['prediction'] == 0]
-
-fig2.add_trace(go.Scatter(x=buy_idx['time'], y=buy_idx['price'], mode='markers', name='Long', marker=dict(color='green', symbol='triangle-up', size=8)))
-fig2.add_trace(go.Scatter(x=sell_idx['time'], y=sell_idx['price'], mode='markers', name='Short', marker=dict(color='red', symbol='triangle-down', size=8)))
-
-fig2.update_layout(xaxis_title='Date', yaxis_title='Price', template="plotly_white")
-st.plotly_chart(fig2, use_container_width=True)
-
-with st.expander("View Raw Data"):
-    st.dataframe(data)
