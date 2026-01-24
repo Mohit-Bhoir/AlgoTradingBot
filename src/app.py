@@ -53,10 +53,71 @@ if model is None:
     st.error(f"Model not found at {model_path}. Please run `dvc repro`.")
     st.stop()
 
+# --- SIDEBAR SETTINGS ---
 st.sidebar.header("Settings")
 initial_capital = st.sidebar.number_input("Initial Capital ($)", value=10000, step=1000)
+# Confidence or other params could go here if model outputs probs
 
-# Prepare data for prediction
+# --- ITERATIVE BACKTEST EXECUTION ---
+if st.button("Run Iterative Backtest"):
+    from IterativeBacktest import IterativeBacktest
+    
+    # 1. Init Backtest Engine (loads data internally from processed/data_clean.csv)
+    # We pass the same data used by the pipeline
+    bc = IterativeBacktest(
+        symbol="EUR_USD", 
+        start=None, 
+        end=None, 
+        amount=initial_capital, 
+        use_spread=True,
+        data_path=data_path
+    )
+    
+    # 2. Run Strategy using the loaded model
+    with st.spinner("Running Event-Driven Backtest..."):
+        bc.test_xgboost_strategy(model)
+    
+    # 3. Process Results
+    history_df = pd.DataFrame(bc.history)
+    
+    if not history_df.empty:
+        history_df = history_df.set_index("time")
+        
+        col1, col2 = st.columns([3,1])
+        
+        with col1:
+            st.subheader("Net Equity Curve (Inc. Costs)")
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=history_df.index, 
+                y=history_df['equity'], 
+                name='Strategy Net', 
+                line=dict(color='green', width=2)
+            ))
+            fig.update_layout(xaxis_title="Time", yaxis_title="Equity ($)", template="plotly_white")
+            st.plotly_chart(fig, use_container_width=True)
+            
+        with col2:
+            st.subheader("Performance")
+            final_equity = history_df['equity'].iloc[-1]
+            ret = (final_equity - initial_capital) / initial_capital
+            
+            st.metric("Final Equity", f"${final_equity:,.2f}")
+            st.metric("Total Return", f"{ret:.2%}")
+            st.metric("Trades Executed", bc.trades)
+    else:
+        st.warning("No trades executed or no history available.")
+
+st.divider()
+
+# --- Layout (Legacy Vectorized) ---
+
+col_1, col_2 = st.columns([3, 1])
+
+with col_1:
+    st.subheader("Vectorized Backtest (Reference)")
+
+# Prepare data for prediction (Legacy Vectorized)
 X = data.copy()
 # Drop target/meta columns as done in train/evaluate
 if "direction" in X.columns:

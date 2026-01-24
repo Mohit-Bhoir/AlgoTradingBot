@@ -43,3 +43,5 @@ stages:
     - data/processed/data_clean.csv
     - models/model.pkl
     - src/evaluate.py
+    metrics:
+    - metrics.json

@@ -5,6 +5,7 @@ import os
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 import mlflow
+import json
 
 # --- CREDENTIALS ---
 os.environ["MLFLOW_TRACKING_URI"] = "https://dagshub.com/Mohit-Bhoir/AlgoTradingBacktest.mlflow"
@@ -55,14 +56,24 @@ def evaluate(data_path, model_path):
     
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     with mlflow.start_run():
-        mlflow.log_metric("test_accuracy", acc) # Rename to test_accuracy
+        mlflow.log_metric("test_accuracy", acc)
         print(f"Test Set Accuracy: {acc}")
         
+        # --- ADD THIS BLOCK ---
+        # Save metrics locally for DVC
+        with open("metrics.json", "w") as f:
+            json.dump({"test_accuracy": acc}, f)
+        # ----------------------
+
         cm = confusion_matrix(y_test, predictions)
         cr = classification_report(y_test, predictions, output_dict=True)
         
         mlflow.log_text(str(cm), "confusion_matrix.txt")
         mlflow.log_dict(cr, "classification_report.json")
+        
+        # ADD THIS: Save local metrics for DVC
+        with open("metrics.json", "w") as f:
+            json.dump({"test_accuracy": acc}, f)
 
 if __name__ == "__main__":
     evaluate(eval_params["data_path"], eval_params["model_path"])
