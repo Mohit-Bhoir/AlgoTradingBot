@@ -9,7 +9,3 @@ dvc-s3
 xgboost
 streamlit
 plotly
-pandas
-pyyaml
-streamlit
-plotly
