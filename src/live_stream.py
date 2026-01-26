@@ -30,13 +30,10 @@ class MLTrader(tpqoa.tpqoa):
         self.lags = lags
         
         # Load Model
-        try:
-            with open(model_path, "rb") as f:
-                self.model = pickle.load(f)
-            print(f"Model loaded from {model_path}")
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            raise
+        self.model = load_model(model_path)
+        if self.model is None:
+            # Disable trading or use random predictions for demo
+            pass
 
         # Data versioning path
         self.stream_data_path = os.path.join("data", "streamed", "streamed_data.csv")
@@ -278,6 +275,15 @@ def write_temp_oanda_cfg():
             config.write(f)
         return "oanda_temp.cfg"
     return None
+
+def load_model(model_path):
+    if os.path.exists(model_path):
+        with open(model_path, "rb") as f:
+            return pickle.load(f)
+    else:
+        print("Model file not found. Running in demo mode.")
+        # Return a dummy model or None
+        return None
 
 def run_bot(units=100000):
     if not os.path.exists("params.yaml"):
