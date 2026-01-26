@@ -9,6 +9,8 @@ import tpqoa
 import yaml
 import plotly.graph_objects as go
 import sys
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 # Page Config
 st.set_page_config(page_title="AlgoTrading Bot Dashboard", layout="wide")
