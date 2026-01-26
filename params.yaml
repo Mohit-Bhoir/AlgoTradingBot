@@ -7,7 +7,7 @@ data_fetch:
   output: data/raw/data.csv
 
 preprocess:
-  input: data/raw/data.csv
+  input: data/processed/merged_data.csv
   output: data/processed/data_clean.csv
   lags: 10
 

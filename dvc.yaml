@@ -16,10 +16,11 @@ stages:
   preprocess:
     cmd: python src/preprocess.py
     deps:
-    - data/raw/data.csv
+    - data/processed/merged_data.csv
     - src/preprocess.py
     params:
     - preprocess.input
+    - preprocess.lags
     - preprocess.output
     outs:
     - data/processed/data_clean.csv
@@ -45,3 +46,11 @@ stages:
     - src/evaluate.py
     metrics:
     - metrics.json
+  merge_data:
+    cmd: python src/merge_data.py
+    deps:
+    - data/raw/data.csv
+    - data/streamed/streamed_data.csv
+    - src/merge_data.py
+    outs:
+    - data/processed/merged_data.csv
