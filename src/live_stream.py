@@ -10,8 +10,9 @@ import os
 import xgboost as xgb
 import json
 import configparser
+import streamlit as st
 
-warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 class MLTrader(tpqoa.tpqoa):
     def __init__(self, conf_file, instrument, bar_length, units, model_path, lags):
@@ -250,14 +251,12 @@ def get_oanda_config():
             "access_token": access_token,
             "account_type": account_type
         }
-    # Fallback to oanda.cfg
-    config = configparser.ConfigParser()
-    config.read(os.path.join("API CONNECT", "oanda.cfg"))
-    return {
-        "account_id": config.get("oanda", "account_id"),
-        "access_token": config.get("oanda", "access_token"),
-        "account_type": config.get("oanda", "account_type")
-    }
+    # Only show error if not running in demo mode
+    if os.environ.get("DEMO_MODE", "0") == "1":
+        st.info("Running in demo mode. No Oanda credentials loaded.")
+        return None
+    st.error("Config file not found at API CONNECT/oanda.cfg and no environment variables set.")
+    return None
 
 def write_temp_oanda_cfg():
     """Write a temporary oanda.cfg file from environment variables if not present."""
