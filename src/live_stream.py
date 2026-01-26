@@ -262,6 +262,23 @@ def get_oanda_config():
         "account_type": config.get("oanda", "account_type")
     }
 
+def write_temp_oanda_cfg():
+    """Write a temporary oanda.cfg file from environment variables if not present."""
+    account_id = os.environ.get("OANDA_ACCOUNT_ID")
+    access_token = os.environ.get("OANDA_ACCESS_TOKEN")
+    account_type = os.environ.get("OANDA_ACCOUNT_TYPE")
+    if account_id and access_token and account_type:
+        config = configparser.ConfigParser()
+        config['oanda'] = {
+            'account_id': account_id,
+            'access_token': access_token,
+            'account_type': account_type
+        }
+        with open("oanda_temp.cfg", "w") as f:
+            config.write(f)
+        return "oanda_temp.cfg"
+    return None
+
 def run_bot(units=100000):
     if not os.path.exists("params.yaml"):
         print("params.yaml not found.")
@@ -280,8 +297,9 @@ def run_bot(units=100000):
     else:
         bar_len = "15min"
 
+    conf_file = write_temp_oanda_cfg() or "API CONNECT/oanda.cfg"
     trader = MLTrader(
-        conf_file=params['data_fetch']['config_path'],
+        conf_file=conf_file,
         instrument=params['data_fetch']['instrument'],
         bar_length=bar_len,
         units=units,
