@@ -9,6 +9,7 @@ import yaml
 import os
 import xgboost as xgb
 import json
+import configparser
 
 warnings.filterwarnings("ignore")
 
@@ -240,6 +241,26 @@ class MLTrader(tpqoa.tpqoa):
                  print(f"Data saved to {self.stream_data_path}")
              except Exception as e:
                  print(f"Error saving stream data: {e}")
+
+def get_oanda_config():
+    # Try to read from environment variables first
+    account_id = os.environ.get("OANDA_ACCOUNT_ID")
+    access_token = os.environ.get("OANDA_ACCESS_TOKEN")
+    account_type = os.environ.get("OANDA_ACCOUNT_TYPE")
+    if account_id and access_token and account_type:
+        return {
+            "account_id": account_id,
+            "access_token": access_token,
+            "account_type": account_type
+        }
+    # Fallback to oanda.cfg
+    config = configparser.ConfigParser()
+    config.read(os.path.join("API CONNECT", "oanda.cfg"))
+    return {
+        "account_id": config.get("oanda", "account_id"),
+        "access_token": config.get("oanda", "access_token"),
+        "account_type": config.get("oanda", "account_type")
+    }
 
 def run_bot(units=100000):
     if not os.path.exists("params.yaml"):
