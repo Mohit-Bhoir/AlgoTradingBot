@@ -15,6 +15,10 @@ st.set_page_config(page_title="AlgoTrading Bot Dashboard", layout="wide")
 
 st.title("AlgoTrading Bot Live Dashboard")
 
+st.markdown("""
+**Note:** This dashboard and trading bot are for illustration and educational purposes only. Actual production trading bots do not typically operate at a 1-minute granularity, and the PnL shown here is not guaranteed to be optimal or representative of real-world trading performance. Use at your own risk.
+""")
+
 # ------------- Helper Functions -------------
 
 def load_params():
@@ -244,6 +248,8 @@ if os.path.exists(trades_file):
             trades_data = json.load(f)
         if trades_data:
             trades_df = pd.DataFrame(trades_data)
+            # Remove 'pl' and 'cum_pl' columns if present
+            trades_df = trades_df.drop(columns=[col for col in ['pl', 'cum_pl'] if col in trades_df.columns], errors='ignore')
             st.dataframe(trades_df.sort_index(ascending=False))
         else:
             st.info("No trades recorded locally yet.")
@@ -257,7 +263,11 @@ st.subheader("Oanda Transaction Report")
 if st.button("Refresh Oanda Transactions"):
     trans_df = get_transactions(conf_path)
     if not trans_df.empty:
-        st.dataframe(trans_df)
+        # Drop columns that are all NaN or all None
+        trans_df = trans_df.dropna(axis=1, how='all')
+        trans_df = trans_df.loc[:, trans_df.apply(lambda col: not all(x is None for x in col))]
+        # Show only the 5 most recent rows
+        st.dataframe(trans_df.tail(5))
     else:
         st.info("No transactions found or error fetching.")
 
