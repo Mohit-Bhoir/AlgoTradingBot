@@ -16,8 +16,8 @@ train:
   model_path: models/model.pkl
   test_size: 0.2
   random_state: 42
-  n_estimators: 2
-  max_depth: 2
+  n_estimators: 100
+  max_depth: 5
   model: models/model.pkl
 
 evaluate:

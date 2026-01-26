@@ -142,9 +142,32 @@ class MLTrader(tpqoa.tpqoa):
             except Exception as e:
                 print(f"Prediction error: {e}")
             
+    def sync_position(self):
+        try:
+            positions = self.get_positions()
+            units = 0
+            for pos in positions:
+                if pos.get('instrument') == self.instrument:
+                    long_units = int(float(pos.get('long', {}).get('units', 0)))
+                    short_units = int(float(pos.get('short', {}).get('units', 0)))
+                    units = long_units - short_units
+                    break
+            if units > 0:
+                self.position = 1
+            elif units < 0:
+                self.position = -1
+            else:
+                self.position = 0
+            print(f"Synced Position: {self.position} (Net Units: {units})")
+        except Exception as e:
+            print(f"Error syncing position: {e}")
+
     def execute_trades(self):
         if self.data is None or self.data.empty:
             return
+
+        # Always sync with Oanda before deciding
+        self.sync_position()
 
         try:
             current_pos = self.data["position"].iloc[-1]

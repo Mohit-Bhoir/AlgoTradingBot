@@ -6,6 +6,7 @@ import pickle
 from sklearn.metrics import confusion_matrix, classification_report
 from mlflow.models import infer_signature
 from sklearn.model_selection import train_test_split, GridSearchCV, TimeSeriesSplit
+from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 from urllib.parse import urlparse
 import mlflow
@@ -15,15 +16,19 @@ os.environ["MLFLOW_TRACKING_URI"] = "https://dagshub.com/Mohit-Bhoir/AlgoTrading
 os.environ["MLFLOW_TRACKING_USERNAME"] = "Mohit-Bhoir"
 os.environ["MLFLOW_TRACKING_PASSWORD"] = "8407fd9e577fa22b1f5f3df39f7a37252fd1ded3"
 
-def hyperparameter_tuning(X_train, y_train, param_grid):
-    xgb = XGBClassifier(
-        objective="binary:logistic",
-        eval_metric="logloss",
-        random_state=42,
-    )
+def hyperparameter_tuning(X_train, y_train, param_grid, scale_pos_weight):
+    pipeline = Pipeline([
+        ('scaler', StandardScaler()),
+        ('xgb', XGBClassifier(
+            objective="binary:logistic",
+            eval_metric="logloss",
+            random_state=42,
+            scale_pos_weight=scale_pos_weight
+        ))
+    ])
     tscv = TimeSeriesSplit(n_splits=3)
     grid_search = GridSearchCV(
-        estimator=xgb,
+        estimator=pipeline,
         param_grid=param_grid,
         scoring="accuracy",
         cv=tscv,
@@ -51,6 +56,15 @@ def train(data_path, model_path, random_state, n_estimators, max_depth):
 
     y = data["direction"]
 
+    # Compute class weight for imbalance
+    n_pos = (y == 1).sum()
+    n_neg = (y == 0).sum()
+    if n_pos > 0:
+        scale_pos_weight = n_neg / n_pos
+    else:
+        scale_pos_weight = 1.0
+    print(f"Class balance: 0s={n_neg}, 1s={n_pos}, scale_pos_weight={scale_pos_weight:.2f}")
+
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
 
     with mlflow.start_run():
@@ -59,20 +73,19 @@ def train(data_path, model_path, random_state, n_estimators, max_depth):
         )
         signature = infer_signature(X_train, y_train)
 
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
-
-        # Valid XGBoost hyperparameters
+        # Pipeline handles scaling now, so we pass raw data here 
+        # (Pipeline calls fit_transform internally on the training set during GridSearch)
+        
+        # Adjust param_grid to match pipeline step names (prefix with 'xgb__')
         param_grid = {
-            "n_estimators": [n_estimators] if n_estimators is not None else [100, 200],
-            "max_depth": [max_depth] if max_depth is not None else [3, 5, 8],
-            "learning_rate": [0.05, 0.1],
-            "subsample": [0.8, 1.0],
-            "colsample_bytree": [0.8, 1.0],
+            "xgb__n_estimators": [n_estimators] if n_estimators is not None else [100, 200],
+            "xgb__max_depth": [max_depth] if max_depth is not None else [3, 5, 8],
+            "xgb__learning_rate": [0.05, 0.1],
+            "xgb__subsample": [0.8, 1.0],
+            "xgb__colsample_bytree": [0.8, 1.0],
         }
 
-        grid_search = hyperparameter_tuning(X_train, y_train, param_grid)
+        grid_search = hyperparameter_tuning(X_train, y_train, param_grid, scale_pos_weight)
         best_model = grid_search.best_estimator_
 
         y_pred = best_model.predict(X_test)
@@ -82,11 +95,6 @@ def train(data_path, model_path, random_state, n_estimators, max_depth):
 
         mlflow.log_params(grid_search.best_params_)
         mlflow.log_metric("accuracy", best_model.score(X_test, y_test))
-
-        cm = confusion_matrix(y_test, y_pred)
-        cr = classification_report(y_test, y_pred, output_dict=True)
-        mlflow.log_text(str(cm), "confusion_matrix.txt")
-        mlflow.log_dict(cr, "classification_report.json")
 
         tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
         if tracking_url_type_store != "file":
