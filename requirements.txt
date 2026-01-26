@@ -9,3 +9,4 @@ dvc-s3
 xgboost
 streamlit
 plotly
+pyarrow==18.1.0

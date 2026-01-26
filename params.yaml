@@ -3,7 +3,7 @@ data_fetch:
   instrument: EUR_USD
   start: "2023-01-01"
   end: "2025-12-31"
-  granularity: M15
+  granularity: M1
   output: data/raw/data.csv
 
 preprocess:
@@ -23,3 +23,9 @@ train:
 evaluate:
   data_path: data/processed/data_clean.csv
   model_path: models/model.pkl
+
+live_stream:
+  config_path: API CONNECT/oanda.cfg
+  instrument: EUR_USD
+  granularity: M1
+  
