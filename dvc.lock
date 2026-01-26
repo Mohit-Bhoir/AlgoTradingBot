@@ -3,30 +3,31 @@ stages:
   preprocess:
     cmd: python src/preprocess.py
     deps:
-    - path: data/raw/data.csv
+    - path: data/processed/merged_data.csv
       hash: md5
-      md5: 6ee0e54395bf6b3b357428cbcb907ab5
-      size: 2150887
+      md5: 35549ac2673a9d0631bbb3976b0d8202
+      size: 38624585
     - path: src/preprocess.py
       hash: md5
       md5: 0e95c53389b402b9abf8b0ca309157ee
       size: 984
     params:
       params.yaml:
-        preprocess.input: data/raw/data.csv
+        preprocess.input: data/processed/merged_data.csv
+        preprocess.lags: 10
         preprocess.output: data/processed/data_clean.csv
     outs:
     - path: data/processed/data_clean.csv
       hash: md5
-      md5: 64c304305981b4942292363c7ba3e8c2
-      size: 20731175
+      md5: f7c69a0c7600f47a4e72ec7ff5ece482
+      size: 297911933
   train:
     cmd: python src/train.py
     deps:
     - path: data/processed/data_clean.csv
       hash: md5
-      md5: 64c304305981b4942292363c7ba3e8c2
-      size: 20731175
+      md5: f7c69a0c7600f47a4e72ec7ff5ece482
+      size: 297911933
     - path: src/train.py
       hash: md5
       md5: 6a6cabd7add90f45f72e0f30cfdd0abd
@@ -42,19 +43,19 @@ stages:
     outs:
     - path: models/model.pkl
       hash: md5
-      md5: b95cc29272aa9235a7d7e9c5aca78020
-      size: 6030
+      md5: 9d30d8e59297582bc07cf99e5c4e2f28
+      size: 6052
   evaluate:
     cmd: python src/evaluate.py
     deps:
     - path: data/processed/data_clean.csv
       hash: md5
-      md5: 64c304305981b4942292363c7ba3e8c2
-      size: 20731175
+      md5: f7c69a0c7600f47a4e72ec7ff5ece482
+      size: 297911933
     - path: models/model.pkl
       hash: md5
-      md5: b95cc29272aa9235a7d7e9c5aca78020
-      size: 6030
+      md5: 9d30d8e59297582bc07cf99e5c4e2f28
+      size: 6052
     - path: src/evaluate.py
       hash: md5
       md5: 7706c3d9f8a72b403cc514a7e6278f36
@@ -62,7 +63,7 @@ stages:
     outs:
     - path: metrics.json
       hash: md5
-      md5: e1c216f15e05150fa5dfacf5cfd51d42
+      md5: 2f4f7e0dbe50e0dc5cdfaad1e4889550
       size: 37
   data_fetch:
     cmd: python src/fetch_data.py
@@ -79,12 +80,32 @@ stages:
       params.yaml:
         data_fetch.config_path: API CONNECT/oanda.cfg
         data_fetch.end: '2025-12-31'
-        data_fetch.granularity: M15
+        data_fetch.granularity: M1
         data_fetch.instrument: EUR_USD
         data_fetch.output: data/raw/data.csv
         data_fetch.start: '2023-01-01'
     outs:
     - path: data/raw/data.csv
       hash: md5
-      md5: 6ee0e54395bf6b3b357428cbcb907ab5
-      size: 2150887
+      md5: 9024d03c0c416f09dab391bb7f582a8a
+      size: 31971959
+  merge_data:
+    cmd: python src/merge_data.py
+    deps:
+    - path: data/raw/data.csv
+      hash: md5
+      md5: 9024d03c0c416f09dab391bb7f582a8a
+      size: 31971959
+    - path: data/streamed/streamed_data.csv
+      hash: md5
+      md5: b21a68f7330f524a3bc814c4464070e0
+      size: 928
+    - path: src/merge_data.py
+      hash: md5
+      md5: 4e07a7a905c6dc929b765107454e28ec
+      size: 1865
+    outs:
+    - path: data/processed/merged_data.csv
+      hash: md5
+      md5: 35549ac2673a9d0631bbb3976b0d8202
+      size: 38624585

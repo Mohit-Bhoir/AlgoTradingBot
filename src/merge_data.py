@@ -18,19 +18,24 @@ def merge_datasets():
 
     # Load Streamed Data
     if os.path.exists(streamed_path):
-        # Streamed data might not have a header if created incrementally, 
-        # but your bot code does write headers for new files. 
-        # We assume standard CSV format here matching raw data.
         try:
-            df_streamed = pd.read_csv(streamed_path, parse_dates=['time'], index_col='time')
-        except ValueError:
-            # If dates fail to parse, specific handling might be needed based on bot output format
-            df_streamed = pd.read_csv(streamed_path)
-            if 'time' in df_streamed.columns:
-                df_streamed['time'] = pd.to_datetime(df_streamed['time'])
-                df_streamed.set_index('time', inplace=True)
+            # Try reading with index_col=0 (first column as index)
+            df_streamed = pd.read_csv(streamed_path, index_col=0)
+            df_streamed.index = pd.to_datetime(df_streamed.index, utc=True)
+            df_streamed.index.name = 'time'
+        except Exception as e:
+            print(f"Error reading streamed data: {e}")
+            df_streamed = pd.DataFrame()
     else:
         df_streamed = pd.DataFrame()
+
+    # Ensure raw data index is also UTC aware if streamed is UTC
+    if not df_raw.empty:
+         # Localize if naive, convert if aware
+         if df_raw.index.tz is None:
+             df_raw.index = df_raw.index.tz_localize('UTC')
+         else:
+             df_raw.index = df_raw.index.tz_convert('UTC')
 
     # Concatenate
     df_final = pd.concat([df_raw, df_streamed])

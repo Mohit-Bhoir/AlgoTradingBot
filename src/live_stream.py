@@ -210,6 +210,7 @@ class MLTrader(tpqoa.tpqoa):
                  # Last completed bar
                  last_bar = self.raw_data.iloc[[-1]].copy()
                  last_bar.rename(columns={self.instrument: 'c'}, inplace=True)
+                 last_bar.index.name = 'time'
                  
                  header = not os.path.exists(self.stream_data_path)
                  last_bar.to_csv(self.stream_data_path, mode='a', header=header)

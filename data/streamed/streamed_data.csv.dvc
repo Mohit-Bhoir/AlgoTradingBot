@@ -1,5 +1,5 @@
 outs:
-- md5: a25e13ef1ec3a4283c2e421037235eb7
-  size: 415
+- md5: 29d80661a550d3af74bd33e5fb6a3226
+  size: 893
   hash: md5
   path: streamed_data.csv
