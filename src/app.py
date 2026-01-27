@@ -287,7 +287,7 @@ else:
 # 4. Oanda Transactions
 st.subheader("Oanda Transaction Report")
 if st.button("Refresh Oanda Transactions"):
-    trans_df = get_transactions(conf_path)
+    trans_df = get_transactions()
     if not trans_df.empty:
         # Drop columns that are all NaN or all None
         trans_df = trans_df.dropna(axis=1, how='all')
