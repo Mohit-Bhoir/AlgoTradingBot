@@ -33,8 +33,8 @@ class MLTrader(tpqoa.tpqoa):
         # Load Model
         self.model = load_model(model_path)
         if self.model is None:
-            # Disable trading or use random predictions for demo
-            pass
+            print("Model file not found. Using DummyModel for demo mode.")
+            self.model = DummyModel()
 
         # Data versioning path
         self.stream_data_path = os.path.join("data", "streamed", "streamed_data.csv")
@@ -280,9 +280,15 @@ def load_model(model_path):
         with open(model_path, "rb") as f:
             return pickle.load(f)
     else:
-        print("Model file not found. Running in demo mode.")
+        print("Running in demo mode.")
         # Return a dummy model or None
         return None
+
+class DummyModel:
+    def predict(self, X):
+        # Always predict "short" (0) or random
+        import numpy as np
+        return np.zeros(len(X), dtype=int)
 
 def run_bot(units=100000):
     if not os.path.exists("params.yaml"):
