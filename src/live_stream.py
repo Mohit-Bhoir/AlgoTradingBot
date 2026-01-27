@@ -302,12 +302,12 @@ def run_bot(units=100000):
     else:
         bar_len = "15min"
 
-    conf_file = write_temp_oanda_cfg() or params['data_fetch']['config_path']
+    conf_file = write_temp_oanda_cfg() or "API CONNECT/oanda.cfg"
     if not os.path.exists(conf_file):
         print("Oanda credentials not found. Please set them as Streamlit secrets for live account data.")
-        # Optionally, return or run in demo mode here
+        # Optionally, run in demo mode or exit
     trader = MLTrader(
-        conf_file=params['data_fetch']['config_path'],
+        conf_file=conf_file,
         instrument=params['data_fetch']['instrument'],
         bar_length=bar_len,
         units=units,
