@@ -29,7 +29,26 @@ AlgoTradingLive is a full-stack quantitative trading system for Forexmarkets (e.
 ## 📁 Project Structure
 
 ```
-.├── data/│   ├── raw/            # Historical data│   ├── streamed/       # Live streamed data and trade logs│   └── processed/     # Cleaned/merged data for ML│├── models/             # Trained ML models│├── src/│   ├── app.py          # Streamlit dashboard│   ├── live_stream.py # Main trading bot logic│   ├── train.py       # Model training script│   ├── preprocess.py # Data preprocessing│   └── merge_data.py # Merges historical and live data│├── params.yaml         # Pipeline and model parameters├── requirements.txt   # Python dependencies├── dvc.yaml            # DVC pipeline definition└── README.md
+.
+├── data/
+│   ├── raw/                 # Historical market data
+│   ├── streamed/            # Live streamed data & trade logs
+│   └── processed/           # Cleaned / feature-engineered data
+│
+├── models/                  # Trained ML models
+│
+├── src/
+│   ├── app.py               # Streamlit dashboard
+│   ├── live_stream.py      # Trading bot + Oanda integration
+│   ├── train.py            # Model training
+│   ├── preprocess.py      # Feature engineering
+│   └── merge_data.py       # Historical + live data merge
+│
+├── params.yaml              # Model & pipeline parameters
+├── requirements.txt        # Python dependencies
+├── dvc.yaml                # DVC pipeline definition
+└── README.md
+
 ```
 
 ---
