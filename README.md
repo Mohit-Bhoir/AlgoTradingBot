@@ -161,3 +161,19 @@ streamlit run src/app.py
 ## ⭐ Star This Repo
 
 If you find this useful for learning quant trading, ML pipelines, orreal-time systems --- drop a ⭐ and follow along for updates 🚀📊
+
+# ---
+## 🔑 Oanda Credentials Setup (NEW)
+
+This project now uses a `.env` file for secure and easy credential management. You **must** create a `.env` file in your project root with the following content:
+
+```
+OANDA_ACCOUNT_ID="your_account_id"
+OANDA_ACCESS_TOKEN="your_access_token"
+OANDA_ACCOUNT_TYPE="practice"  # or "live"
+```
+
+- Never commit your `.env` file to public repositories.
+- All scripts and the dashboard will automatically load credentials from `.env`.
+
+---

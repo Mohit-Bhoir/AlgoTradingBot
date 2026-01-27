@@ -2,3 +2,4 @@ venv/
 .vscode/
 API CONNECT/oanda.cfg
 /metrics.json
+.env

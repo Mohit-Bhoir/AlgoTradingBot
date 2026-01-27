@@ -9,14 +9,32 @@ import yaml
 import os
 import xgboost as xgb
 import json
-import configparser
+from dotenv import load_dotenv
 import streamlit as st
 
 warnings.filterwarnings("ignore", category=SyntaxWarning)
 
+def load_model(model_path):
+    """Load ML model from the given path."""
+    try:
+        with open(model_path, "rb") as f:
+            return pickle.load(f)
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return None
+
 class MLTrader(tpqoa.tpqoa):
-    def __init__(self, conf_file, instrument, bar_length, units, model_path, lags):
-        super().__init__(conf_file)
+    def __init__(self, oanda_creds, instrument, bar_length, units, model_path, lags):
+        import configparser
+        config = configparser.ConfigParser()
+        config['oanda'] = {
+            'account_id': oanda_creds['account_id'],
+            'access_token': oanda_creds['access_token'],
+            'account_type': oanda_creds['account_type']
+        }
+        with open("oanda_temp.cfg", "w") as f:
+            config.write(f)
+        super().__init__("oanda_temp.cfg")
         self.instrument = instrument
         self.bar_length = pd.to_timedelta(bar_length)
         self.tick_data = pd.DataFrame()
@@ -255,42 +273,29 @@ def get_oanda_config():
     if os.environ.get("DEMO_MODE", "0") == "1":
         st.info("Running in demo mode. No Oanda credentials loaded.")
         return None
-    st.error("Config file not found at API CONNECT/oanda.cfg and no environment variables set.")
+    # Error already shown above if missing
     return None
 
-def write_temp_oanda_cfg():
-    """Write a temporary oanda.cfg file from environment variables if not present."""
+def get_oanda_credentials():
+    """Load Oanda credentials from .env file."""
+    load_dotenv()
     account_id = os.environ.get("OANDA_ACCOUNT_ID")
     access_token = os.environ.get("OANDA_ACCESS_TOKEN")
     account_type = os.environ.get("OANDA_ACCOUNT_TYPE")
     if account_id and access_token and account_type:
-        config = configparser.ConfigParser()
-        config['oanda'] = {
-            'account_id': account_id,
-            'access_token': access_token,
-            'account_type': account_type
+        return {
+            "account_id": account_id,
+            "access_token": access_token,
+            "account_type": account_type
         }
-        with open("oanda_temp.cfg", "w") as f:
-            config.write(f)
-        return "oanda_temp.cfg"
+    if os.environ.get("DEMO_MODE", "0") == "1":
+        st.info("Running in demo mode. No Oanda credentials loaded.")
+        return None
+    st.error("Oanda credentials not found in .env file.")
     return None
 
-def load_model(model_path):
-    if os.path.exists(model_path):
-        with open(model_path, "rb") as f:
-            return pickle.load(f)
-    else:
-        print("Running in demo mode.")
-        # Return a dummy model or None
-        return None
-
-class DummyModel:
-    def predict(self, X):
-        # Always predict "short" (0) or random
-        import numpy as np
-        return np.zeros(len(X), dtype=int)
-
 def run_bot(units=100000):
+    # Load parameters from params.yaml
     if not os.path.exists("params.yaml"):
         print("params.yaml not found.")
         return
@@ -308,12 +313,12 @@ def run_bot(units=100000):
     else:
         bar_len = "15min"
 
-    conf_file = write_temp_oanda_cfg() or "API CONNECT/oanda.cfg"
-    if not os.path.exists(conf_file):
-        print("Oanda credentials not found. Please set them as Streamlit secrets for live account data.")
-        # Optionally, run in demo mode or exit
+    oanda_creds = get_oanda_credentials()
+    if not oanda_creds:
+        print("Oanda credentials not found. Please set them in .env file.")
+        return
     trader = MLTrader(
-        conf_file=conf_file,
+        oanda_creds=oanda_creds,
         instrument=params['data_fetch']['instrument'],
         bar_length=bar_len,
         units=units,
@@ -323,6 +328,11 @@ def run_bot(units=100000):
     
     trader.get_most_recent()
     trader.stream_data(trader.instrument)
+
+class DummyModel:
+    def predict(self, X):
+        # Always predict '1' (long) for demo purposes
+        return [1] * len(X)
 
 if __name__ == "__main__":
     # Allow units to be passed via env var for dynamic control

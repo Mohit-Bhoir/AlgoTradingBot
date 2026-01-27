@@ -6,6 +6,7 @@ import subprocess
 import signal
 import time
 import tpqoa
+from dotenv import load_dotenv
 import yaml
 import plotly.graph_objects as go
 import sys
@@ -102,18 +103,41 @@ def stop_bot():
     else:
         st.warning("Bot is not running.")
 
-def get_account_summary(conf_path):
+def get_oanda_credentials():
+    load_dotenv()
+    account_id = os.environ.get("OANDA_ACCOUNT_ID")
+    access_token = os.environ.get("OANDA_ACCESS_TOKEN")
+    account_type = os.environ.get("OANDA_ACCOUNT_TYPE")
+    if account_id and access_token and account_type:
+        import configparser
+        config = configparser.ConfigParser()
+        config['oanda'] = {
+            'account_id': account_id,
+            'access_token': access_token,
+            'account_type': account_type
+        }
+        with open("oanda_temp.cfg", "w") as f:
+            config.write(f)
+        return "oanda_temp.cfg"
+    return None
+
+def get_account_summary():
+    conf_path = get_oanda_credentials()
+    if not conf_path:
+        return {"error": "Oanda credentials not found in .env file."}
     try:
         api = tpqoa.tpqoa(conf_path)
         return api.get_account_summary()
     except Exception as e:
         return {"error": str(e)}
 
-def get_transactions(conf_path):
+def get_transactions():
+    conf_path = get_oanda_credentials()
+    if not conf_path:
+        return pd.DataFrame()
     try:
         api = tpqoa.tpqoa(conf_path)
-        # Fetch last 50 transactions
-        trans = api.get_transactions(tid=0) # tid=0 fetches recent
+        trans = api.get_transactions(tid=0)
         return pd.DataFrame(trans)
     except Exception as e:
         return pd.DataFrame()
@@ -123,7 +147,6 @@ def get_transactions(conf_path):
 st.sidebar.header("Bot Controls")
 
 params = load_params()
-conf_path = params.get('data_fetch', {}).get('config_path', 'API CONNECT/oanda.cfg')
 
 # Capital Management (Units)
 current_units = st.sidebar.number_input("Trading Units (Capital per Trade)", min_value=1000, value=100000, step=1000)
@@ -142,8 +165,9 @@ else:
 
 # 1. Account Info
 st.subheader("Live Account Summary (Oanda)")
-if os.path.exists(conf_path):
-    summary = get_account_summary(conf_path)
+conf_path = get_oanda_credentials()
+if conf_path and os.path.exists(conf_path):
+    summary = get_account_summary()
     if "error" not in summary:
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Balance", f"{summary.get('balance', 0)}")

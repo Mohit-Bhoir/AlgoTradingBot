@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+import configparser
 import pandas as pd
 import tpqoa
 import yaml
@@ -8,10 +10,27 @@ params = yaml.safe_load(open("params.yaml"))['data_fetch']
 
 def fetch_data(config_path, instrument, start, end, granularity, output_path):
     # Ensure config path is handled correctly relative to execution
-    if not os.path.exists(config_path):
-        raise FileNotFoundError(f"Config file not found: {config_path}")
+    def get_oanda_credentials():
+        load_dotenv()
+        account_id = os.environ.get("OANDA_ACCOUNT_ID")
+        access_token = os.environ.get("OANDA_ACCESS_TOKEN")
+        account_type = os.environ.get("OANDA_ACCOUNT_TYPE")
+        if account_id and access_token and account_type:
+            config = configparser.ConfigParser()
+            config['oanda'] = {
+                'account_id': account_id,
+                'access_token': access_token,
+                'account_type': account_type
+            }
+            with open("oanda_temp.cfg", "w") as f:
+                config.write(f)
+            return "oanda_temp.cfg"
+        return None
 
-    api = tpqoa.tpqoa(config_path)
+    conf_path = get_oanda_credentials()
+    if not conf_path:
+        raise Exception("Oanda credentials not found in .env file.")
+    api = tpqoa.tpqoa(conf_path)
     
     print(f"Fetching {instrument} from {start} to {end}...")
     df = api.get_history(instrument=instrument, start=start, end=end, granularity=granularity, price="M")
