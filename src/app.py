@@ -296,7 +296,19 @@ if st.button("Refresh Oanda Transactions"):
         st.dataframe(trans_df.tail(5))
     else:
         st.info("No transactions found or error fetching.")
-
+st.markdown(
+    """
+    <hr style="margin-top:40px;margin-bottom:10px; border-color: #333;">
+    <div style="text-align:center; font-size:14px; color:#fff;">
+        <strong>AI Finance Advisor</strong> &middot; v0.1.0 &middot; Demo Build by Mohit Bhoir<br>
+        Data Sources: <a href="https://finance.yahoo.com/" target="_blank" style="color:#ffd700;">Yahoo Finance ETFs</a> &middot;
+        <a href="#" target="_blank" style="color:#ffd700;">Monte Carlo Simulation</a><br>
+        <span style="color:gold; font-size:18px;">&#11088;</span>
+        <a href="https://github.com/" target="_blank" style="color:#ffd700;">View on GitHub</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 # Auto-refresh log
 if running:
     time.sleep(5)
