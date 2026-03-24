@@ -1,3 +1,20 @@
+import warnings
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+from sklearn.exceptions import InconsistentVersionWarning
+warnings.filterwarnings("ignore", category=InconsistentVersionWarning)
+
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message=".*If you are loading a serialized model.*"
+)
+
+warnings.filterwarnings(
+    "ignore",
+    category=FutureWarning,
+    module="tpqoa"
+)
 from fastapi import params
 import pandas as pd
 import numpy as np
@@ -5,18 +22,13 @@ import tpqoa
 from datetime import datetime, timedelta, timezone
 import time
 import pickle
-import warnings
 import yaml
 import os
 import xgboost as xgb
 import json
 from dotenv import load_dotenv
 import streamlit as st
-warnings.filterwarnings("ignore", category=FutureWarning, module="tpqoa")
-warnings.filterwarnings("ignore", category=SyntaxWarning)
-warnings.filterwarnings("ignore", category=FutureWarning, module="tpqoa")
-warnings.filterwarnings("ignore", category=UserWarning, message=".*older version of XGBoost.*")
-warnings.filterwarnings("ignore", category=UserWarning, message=".*InconsistentVersionWarning.*")
+
 
 #Load params 
 params = yaml.safe_load(open("params.yaml"))['live_stream']
