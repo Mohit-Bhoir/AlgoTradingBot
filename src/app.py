@@ -13,7 +13,7 @@ import sys
 import warnings
 warnings.filterwarnings("ignore", category=SyntaxWarning)
 
-# Page Config
+# Page Config1
 st.set_page_config(page_title="AlgoTrading Bot Dashboard", layout="wide")
 
 st.title("AlgoTrading Bot Live Dashboard")
@@ -142,6 +142,19 @@ def get_transactions():
     except Exception as e:
         return pd.DataFrame()
 
+def exit_trade():
+    """
+    Logic to exit/close all open positions.
+    Replace this placeholder with actual broker API call.
+    """
+    # Example: Call your broker's API to close all open positions
+    # For now, just log/print
+    print("Exit Trade executed: All open positions should be closed.")
+    # Optionally, add logging or Streamlit notification
+    import logging
+    logging.info("Exit Trade executed: All open positions should be closed.")
+    return True
+
 # ------------- Sidebar Controls -------------
 
 st.sidebar.header("Bot Controls")
@@ -150,6 +163,15 @@ params = load_params()
 
 # Capital Management (Units)
 current_units = st.sidebar.number_input("Trading Units (Capital per Trade)", min_value=1000, value=100000, step=1000)
+
+params = load_params()
+# Capital Management (Units)
+current_units = st.sidebar.number_input("Trading Units (Capital per Trade)", min_value=1000, value=100000, step=1000)
+
+# --- Exit Trade Button ---
+if st.sidebar.button("Exit Trade", help="Close all open positions. Bot can be running or stopped."):
+    result = exit_trade()
+    st.sidebar.success("Exit Trade executed. All open positions should be closed.")
 
 running, pid = get_bot_status()
 if running:
@@ -301,11 +323,10 @@ st.markdown(
     """
     <hr style="margin-top:40px;margin-bottom:10px; border-color: #333;">
     <div style="text-align:center; font-size:14px; color:#fff;">
-        <strong>AI Finance Advisor</strong> &middot; v0.1.0 &middot; Demo Build by Mohit Bhoir<br>
-        Data Sources: <a href="https://finance.yahoo.com/" target="_blank" style="color:#ffd700;">Yahoo Finance ETFs</a> &middot;
-        <a href="#" target="_blank" style="color:#ffd700;">Monte Carlo Simulation</a><br>
+        <strong>Forex Algotrading Bot</strong> &middot; v0.1.0 &middot; Demo Build by Mohit Bhoir<br>
+        Data Sources: <a href="https://www.oanda.com/" target="_blank" style="color:#ffd700;">OANDA API</a><br>
         <span style="color:gold; font-size:18px;">&#11088;</span>
-        <a href="https://github.com/" target="_blank" style="color:#ffd700;">View on GitHub</a>
+        <a href="https://github.com/Mohit-Bhoir/AlgoTradingBot" target="_blank" style="color:#ffd700;">View on GitHub</a>
     </div>
     """,
     unsafe_allow_html=True
