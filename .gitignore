@@ -3,3 +3,9 @@ venv/
 API CONNECT/oanda.cfg
 /metrics.json
 .env
+bot.log
+bot.pid
+oanda_temp.cfg
+__pychache__/
+latest_tick.json
+trades.json
