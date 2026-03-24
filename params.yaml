@@ -26,6 +26,7 @@ evaluate:
 
 live_stream:
   config_path: API CONNECT/oanda.cfg
+  model_path: models/model.pkl
   instrument: EUR_USD
   granularity: M1
   

@@ -1,3 +1,4 @@
+from fastapi import params
 import pandas as pd
 import numpy as np
 import tpqoa
@@ -13,6 +14,10 @@ from dotenv import load_dotenv
 import streamlit as st
 
 warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+#Load params 
+params = yaml.safe_load(open("params.yaml"))['live_stream']
+
 
 def load_model(model_path):
     """Load ML model from the given path."""
@@ -44,6 +49,7 @@ class MLTrader(tpqoa.tpqoa):
         self.units = units
         self.position = 0
         self.profits = []
+        
         
         # ML specific
         self.lags = lags

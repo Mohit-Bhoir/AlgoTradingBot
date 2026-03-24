@@ -164,9 +164,6 @@ params = load_params()
 # Capital Management (Units)
 current_units = st.sidebar.number_input("Trading Units (Capital per Trade)", min_value=1000, value=100000, step=1000)
 
-params = load_params()
-# Capital Management (Units)
-current_units = st.sidebar.number_input("Trading Units (Capital per Trade)", min_value=1000, value=100000, step=1000)
 
 # --- Exit Trade Button ---
 if st.sidebar.button("Exit Trade", help="Close all open positions. Bot can be running or stopped."):
