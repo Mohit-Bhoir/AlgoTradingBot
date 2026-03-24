@@ -12,8 +12,11 @@ import xgboost as xgb
 import json
 from dotenv import load_dotenv
 import streamlit as st
-
+warnings.filterwarnings("ignore", category=FutureWarning, module="tpqoa")
 warnings.filterwarnings("ignore", category=SyntaxWarning)
+warnings.filterwarnings("ignore", category=FutureWarning, module="tpqoa")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*older version of XGBoost.*")
+warnings.filterwarnings("ignore", category=UserWarning, message=".*InconsistentVersionWarning.*")
 
 #Load params 
 params = yaml.safe_load(open("params.yaml"))['live_stream']
