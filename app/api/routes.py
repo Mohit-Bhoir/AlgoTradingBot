@@ -41,19 +41,20 @@ Example requests (curl)
 
 import datetime
 import functools
-import os
+import logging
 
 import jwt
-from flask import Blueprint, jsonify, request
-from sqlalchemy import desc
+from flask import Blueprint, current_app, jsonify, request
+from sqlalchemy import desc, exists
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.core.database import SessionLocal
 from app.core.models import MarketState, User
 
+logger = logging.getLogger(__name__)
+
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
-_SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-production")
 _JWT_ALGORITHM = "HS256"
 _JWT_EXPIRATION_HOURS = 24
 
@@ -74,20 +75,25 @@ def _market_state_to_dict(ms: MarketState) -> dict:
     }
 
 
+def _get_secret_key() -> str:
+    """Return the secret key from the Flask application config."""
+    return current_app.config["SECRET_KEY"]
+
+
 def _create_token(user_id: int) -> str:
     """Create a signed JWT for the given user."""
+    now = datetime.datetime.now(datetime.timezone.utc)
     payload = {
         "user_id": user_id,
-        "exp": datetime.datetime.now(datetime.timezone.utc)
-        + datetime.timedelta(hours=_JWT_EXPIRATION_HOURS),
-        "iat": datetime.datetime.now(datetime.timezone.utc),
+        "exp": now + datetime.timedelta(hours=_JWT_EXPIRATION_HOURS),
+        "iat": now,
     }
-    return jwt.encode(payload, _SECRET_KEY, algorithm=_JWT_ALGORITHM)
+    return jwt.encode(payload, _get_secret_key(), algorithm=_JWT_ALGORITHM)
 
 
 def _decode_token(token: str) -> dict:
     """Decode and verify a JWT.  Raises on failure."""
-    return jwt.decode(token, _SECRET_KEY, algorithms=[_JWT_ALGORITHM])
+    return jwt.decode(token, _get_secret_key(), algorithms=[_JWT_ALGORITHM])
 
 
 def token_required(f):
@@ -173,7 +179,7 @@ def auth_register():
 
     session = SessionLocal()
     try:
-        if session.query(User).filter(User.email == email).first():
+        if session.query(exists().where(User.email == email)).scalar():
             return jsonify({"error": "Email already registered"}), 409
 
         user = User(
@@ -187,7 +193,8 @@ def auth_register():
         return jsonify({"message": "User registered", "user_id": user.id}), 201
     except Exception:
         session.rollback()
-        raise
+        logger.exception("Failed to register user %s", email)
+        return jsonify({"error": "Registration failed"}), 500
     finally:
         session.close()
 
@@ -260,6 +267,7 @@ def user_dashboard(*, current_user_id: int):
 
 @api_bp.errorhandler(500)
 def handle_internal_error(exc):
+    logger.exception("Internal server error: %s", exc)
     return jsonify({"error": "Internal server error"}), 500
 
 
