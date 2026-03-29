@@ -5,7 +5,7 @@ Persistence helper for saving ``engine.py`` analytics output into the
 ``market_states`` database table.
 
 The :func:`save_market_state` function accepts the **exact** dictionary
-returned by :pymethod:`ForexAnalyticsEngine._run_inference` and inserts
+returned by :meth:`ForexAnalyticsEngine._run_inference` and inserts
 it as a new :class:`~app.core.models.MarketState` row.
 
 Usage
@@ -17,7 +17,7 @@ Usage
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
@@ -63,6 +63,8 @@ def save_market_state(
         timestamp_raw = payload["timestamp"]
         if isinstance(timestamp_raw, str):
             timestamp_raw = datetime.fromisoformat(timestamp_raw)
+        if timestamp_raw.tzinfo is None:
+            timestamp_raw = timestamp_raw.replace(tzinfo=timezone.utc)
 
         market_state = MarketState(
             timestamp=timestamp_raw,

@@ -20,6 +20,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
 )
@@ -104,8 +105,8 @@ class TradeJournal(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    entry_price = Column(Float, nullable=False)
-    stop_loss = Column(Float)
+    entry_price = Column(Numeric(precision=18, scale=8), nullable=False)
+    stop_loss = Column(Numeric(precision=18, scale=8))
     notes = Column(Text)
     created_at = Column(
         DateTime(timezone=True),
